@@ -5,6 +5,7 @@ from __future__ import annotations
 import streamlit as st
 
 from ranking.engine import (
+    add_movie,
     apply_comparison,
     is_ranking_complete,
     progress_label,
@@ -30,6 +31,7 @@ def init_state() -> None:
         "session": None,
         "current_pair": None,
         "resumed": False,
+        "add_movie_error": None,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -173,6 +175,25 @@ def render_ranking() -> None:
             st.rerun()
 
     st.divider()
+
+    with st.expander("Forgot a movie?"):
+        st.caption("Add a title you left off your initial list. It joins the ranking right away.")
+        with st.form("add_movie_form", clear_on_submit=True):
+            new_movie = st.text_input("Movie name", placeholder="The Matrix")
+            if st.form_submit_button("Add to list"):
+                error = add_movie(session, new_movie)
+                if error:
+                    st.session_state.add_movie_error = error
+                else:
+                    st.session_state.add_movie_error = None
+                    st.session_state.movies_text = "\n".join(session.movies.keys())
+                    save_session(session)
+                    st.session_state.current_pair = select_next_pair(session)
+                st.rerun()
+
+    if st.session_state.get("add_movie_error"):
+        st.warning(st.session_state.add_movie_error)
+
     if st.button("Finish early"):
         st.session_state.stage = "results"
         st.session_state.current_pair = None

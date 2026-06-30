@@ -70,6 +70,17 @@ def apply_comparison(
     session.total_comparisons += 1
 
 
+def add_movie(session: RankingSession, movie_name: str) -> str | None:
+    """Add a movie mid-ranking. Returns an error message, or None on success."""
+    name = movie_name.strip()
+    if not name:
+        return "Enter a movie name."
+    if name in session.movies:
+        return f'"{name}" is already in your list.'
+    session.movies[name] = create_movie_rating(name)
+    return None
+
+
 def progress_label(session: RankingSession) -> str:
     avg_rd = session.average_rd
     return (
